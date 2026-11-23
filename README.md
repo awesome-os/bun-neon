@@ -49,8 +49,28 @@ Invoke `bun-neon` through the workspace `bin/` atomic triplet wrappers:
 | [`bun-global.mts`](bun-global.mts) | `Bun` (`file`, `write`, `serve`, `spawn`, `spawnSync`, `hash`, `CryptoHasher`, `password`, `deepEquals`, `escapeHTML`, `nanoseconds`, `sleep`, `which`, `env`, `version`), `installBunNeonGlobal` | `node:fs`, `node:http`, `node:child_process`, `node:crypto`, `node:util` |
 | [`bun-sqlite.mts`](bun-sqlite.mts) | `Database` (`query`, `prepare`, `exec`, `run`, `transaction`, `close`) | Native `node:sqlite` (`DatabaseSync`) |
 | [`bun-test.mts`](bun-test.mts) | `describe`, `test`, `it`, `beforeAll`, `afterAll`, `beforeEach`, `afterEach`, `expect`, `mock`, `spyOn` | Native `node:test` + `node:assert/strict` |
-| [`bun-ffi.mts`](bun-ffi.mts) | `FFIType`, `suffix`, `ptr`, `CString`, `toArrayBuffer`, `dlopen` | Native buffer/pointer utilities & FFI ABI surface |
+| [`bun-ffi.mts`](bun-ffi.mts) | `FFIType`, `suffix`, `ptr`, `CString`, `toArrayBuffer`, `dlopen`, `ghostFFI`, `getGhostCasDir` | Native buffer/pointer utilities, FFI ABI & GhostModuleRegistry CAS hydration |
 | [`cli.mts`](cli.mts) | `bun-neon` CLI entrypoint (`run`, `test`, `-e`, `install`, `add`, `x`) | `node:vm`, `node:child_process` (`shell: false`), `sectium-node-hook.mts` |
+
+---
+
+## Ghost-Driven Versioned FFI (`ghostFFI` + `GhostModuleRegistry`)
+
+Resolve versioned, SHA-256-verified native shared libraries directly from the machine CAS registry (`awesome-os/b8g-ghost`) with zero `node-gyp` or manual installs:
+
+```ts
+import { ghostFFI } from './bun-ffi.mts';
+
+const display = await ghostFFI('awesome-os/sectium-browser@v0.5.0-baseline', {
+  lib: 'libsectium_display',
+  sha256: '50badeec9a1882ea6997b327f207bc91366561c5e3bff56572cfb1e7fc85b923',
+  symbols: {
+    sectium_display_init: { args: ['ptr'], returns: 'i32' },
+  },
+});
+// Cached in %LOCALAPPDATA%/AwesomeOS/cas/<sha256>/ (or ~/.local/share/awesome-os/cas/<sha256>/)
+display.dispose();
+```
 
 ---
 

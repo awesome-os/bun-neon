@@ -1,4 +1,7 @@
-import { existsSync, statSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { homedir } from 'node:os';
+import { join } from 'node:path';
 
 export const FFIType = {
   char: 0,
@@ -193,6 +196,91 @@ export function dlopen<T extends FFISymbolMap>(path: string, symbols: T): FFILib
     symbols: bound,
     close(): void {
       closed = true;
+    },
+  };
+}
+
+export interface GhostFFIOptions<T extends FFISymbolMap> {
+  readonly lib: string;
+  readonly sha256: string;
+  readonly downloadUrl?: string;
+  readonly casDir?: string;
+  readonly symbols: T;
+  readonly fetcher?: (url: string) => Promise<Uint8Array>;
+}
+
+export interface GhostFFILibrary<T extends FFISymbolMap> extends FFILibrary<T> {
+  readonly spec: string;
+  readonly sha256: string;
+  readonly casHit: boolean;
+  dispose(): void;
+}
+
+export function getGhostCasDir(override?: string): string {
+  if (override && override.trim()) return override;
+  if (process.env['B8G_CAS_DIR']?.trim()) return process.env['B8G_CAS_DIR']!;
+  if (process.platform === 'win32') {
+    const local = process.env['LOCALAPPDATA'] ?? join(homedir(), 'AppData', 'Local');
+    return join(local, 'AwesomeOS', 'cas');
+  }
+  return join(homedir(), '.local', 'share', 'awesome-os', 'cas');
+}
+
+export async function ghostFFI<T extends FFISymbolMap>(
+  spec: string,
+  opts: GhostFFIOptions<T>,
+): Promise<GhostFFILibrary<T>> {
+  const expected = opts.sha256.toLowerCase();
+  if (!/^[0-9a-f]{64}$/.test(expected)) {
+    throw new TypeError(`ghostFFI requires a 64-hex SHA-256 digest, got "${opts.sha256}"`);
+  }
+  const filename =
+    opts.lib.endsWith('.dll') || opts.lib.endsWith('.so') || opts.lib.endsWith('.dylib')
+      ? opts.lib
+      : process.platform === 'win32'
+        ? `${opts.lib}.dll`
+        : process.platform === 'darwin'
+          ? `${opts.lib}-macos-${process.arch === 'arm64' ? 'arm64' : 'x64'}.dylib`
+          : `${opts.lib}-linux-${process.arch === 'arm64' ? 'arm64' : 'x64'}.so`;
+
+  const entryDir = join(getGhostCasDir(opts.casDir), expected);
+  const targetPath = join(entryDir, filename);
+  let casHit = false;
+
+  if (existsSync(targetPath)) {
+    const actual = createHash('sha256').update(readFileSync(targetPath)).digest('hex');
+    if (actual === expected) casHit = true;
+  }
+
+  if (!casHit) {
+    const [repo, tag] = spec.split('@');
+    const url = opts.downloadUrl ?? `https://github.com/${repo}/releases/download/${tag}/${filename}`;
+    const bytes = opts.fetcher
+      ? await opts.fetcher(url)
+      : new Uint8Array(await (await fetch(url)).arrayBuffer());
+    const actual = createHash('sha256').update(bytes).digest('hex');
+    if (actual !== expected) {
+      throw new Error(`ghostFFI SHA-256 mismatch for ${filename}: expected ${expected}, got ${actual}`);
+    }
+    mkdirSync(entryDir, { recursive: true });
+    const tmp = `${targetPath}.tmp-${process.pid}`;
+    writeFileSync(tmp, bytes);
+    try {
+      renameSync(tmp, targetPath);
+    } catch (err) {
+      rmSync(tmp, { force: true });
+      throw err;
+    }
+  }
+
+  const lib = dlopen(targetPath, opts.symbols);
+  return {
+    ...lib,
+    spec,
+    sha256: expected,
+    casHit,
+    dispose(): void {
+      lib.close();
     },
   };
 }
