@@ -80,3 +80,13 @@ display.dispose();
 .\bin\node.ps1 --test sections/bun-neon/bun-neon.test.mts
 .\bin\b8g-web-doc.ps1 sections/bun-neon/README.md
 ```
+
+## Quick Install & Run (Windows / Linux / macOS)
+
+```sh
+# Download latest release assets (all platforms)
+gh release download -R awesome-os/bun-neon --dir ./bun-neon-release
+
+# Or clone source directly (all platforms)
+git clone https://github.com/awesome-os/bun-neon.git && cd bun-neon
+```
