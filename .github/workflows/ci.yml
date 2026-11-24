@@ -22,28 +22,21 @@ jobs:
       - name: Run Zero-JSC Bun-Neon Compatibility Suite
         run: node --test bun-neon.test.mts
 
-      - name: Pull & Verify V8 Substrate from awesome-os/sectium-browser Baseline
-        env:
-          GH_TOKEN: ${{ github.token }}
-          BASELINE_TAG: ${{ inputs.baseline_tag || 'v0.5.0-baseline' }}
+      - name: Hydrate & Verify Dependencies Directly from Canonical O(1) Ghost CAS (cas-v1)
         run: |
-          mkdir -p .baseline
-          gh release download "$BASELINE_TAG" \
-            --repo awesome-os/sectium-browser \
-            --pattern "RollingReleaseManifest.json" \
-            --pattern "v8-shared-win64.b8p" \
-            --pattern "bun-neon-v8.exe" \
-            --dir .baseline --clobber
           node -e "
-            const fs = require('fs');
             const crypto = require('crypto');
-            const m = JSON.parse(fs.readFileSync('.baseline/RollingReleaseManifest.json', 'utf8'));
-            if (m.brand.mascot !== 'Lumi White Dragon') throw new Error('Expected Lumi White Dragon baseline');
-            for (const f of ['v8-shared-win64.b8p', 'bun-neon-v8.exe']) {
-              const entry = m.components.find(c => c.filename === f);
-              if (!entry) throw new Error('Missing ' + f + ' in manifest');
-              const hash = crypto.createHash('sha256').update(fs.readFileSync('.baseline/' + f)).digest('hex');
-              if (hash !== entry.sha256) throw new Error('SHA-256 mismatch for ' + f);
-              console.log('[VERIFIED]', f, entry.bytes, 'bytes, sha256=' + hash.slice(0, 16) + '...');
-            }
+            const INDEX_URL = 'https://raw.githubusercontent.com/awesome-os/b8g-ghost/main/manifests/index.json';
+            (async () => {
+              const idx = await (await fetch(INDEX_URL)).json();
+              console.log('[bun-neon] Connected to Ghost CAS:', idx.schema, 'entries=' + idx.total_entries);
+              for (const f of ['v8-shared-win64.b8p', 'bun-neon-v8.exe', 'libbrotli-linux-x64.so', 'libsqlite3-wasm32-wasi.wasm']) {
+                const entry = idx.entries[f];
+                if (!entry) throw new Error('Missing ' + f + ' in canonical Ghost CAS index');
+                const buf = Buffer.from(await (await fetch(entry.download_url)).arrayBuffer());
+                const hash = crypto.createHash('sha256').update(buf).digest('hex');
+                if (hash !== entry.sha256) throw new Error('SHA-256 mismatch for ' + f);
+                console.log('[CAS-VERIFIED]', f, buf.length, 'bytes, sha256=' + hash.slice(0, 16) + '...');
+              }
+            })();
           "
