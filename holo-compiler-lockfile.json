@@ -1,0 +1,40 @@
+{
+  "schema": "holo-compiler-lockfile-v1",
+  "abiMagic": "0x33564742",
+  "casLayout": "v11",
+  "repo": "awesome-os/bun-neon",
+  "targets": [
+    "win64",
+    "linux-x64",
+    "linux-arm64",
+    "macos-arm64",
+    "wasm32-wasi"
+  ],
+  "generatedAt": "2026-11-24T23:53:02.473Z",
+  "dependencies": [
+    {
+      "id": "awesome-os/bun-neon/bun-neon.tar.gz",
+      "kind": "object",
+      "version": "v0.1.0",
+      "target": "any",
+      "sha512": "32a3971d85b49d910ad345ac73d0e6e512c5a24a3f0345c84e6112c127f1541c7417eb291af66fbf94de5dc397b010ee2f55f6b97a7ff46940a7151a785d0ebf",
+      "size": 20650,
+      "executable": false,
+      "blob": "v11/files/32/32a3971d85b49d910ad345ac73d0e6e512c5a24a3f0345c84e6112c127f1541c7417eb291af66fbf94de5dc397b010ee2f55f6b97a7ff46940a7151a785d0ebf",
+      "url": "https://github.com/awesome-os/bun-neon/releases/download/v0.1.0/bun-neon.tar.gz",
+      "dependencies": []
+    },
+    {
+      "id": "awesome-os/bun-neon/SHA256SUMS.txt",
+      "kind": "object",
+      "version": "v0.1.0",
+      "target": "any",
+      "sha512": "05b13ac7f6cbd8376b26c5bc2ac83dab72e53bec6b46591b8dbeb4b06e213dd170f20863f3b6109551961d6956840367864c2efc453736a27e618998cf2af59d",
+      "size": 82,
+      "executable": false,
+      "blob": "v11/files/05/05b13ac7f6cbd8376b26c5bc2ac83dab72e53bec6b46591b8dbeb4b06e213dd170f20863f3b6109551961d6956840367864c2efc453736a27e618998cf2af59d",
+      "url": "https://github.com/awesome-os/bun-neon/releases/download/v0.1.0/SHA256SUMS.txt",
+      "dependencies": []
+    }
+  ]
+}
