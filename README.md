@@ -84,9 +84,9 @@ display.dispose();
 ## Quick Install & Run (Windows / Linux / macOS)
 
 ```sh
-# Download latest release assets (all platforms)
-gh release download -R awesome-os/bun-neon --dir ./bun-neon-release
+# Install / hydrate from v11 CAS via holo-pm
+holo-pm install repository://github.com/awesome-os/bun-neon@main
 
-# Or clone source directly (all platforms)
-git clone https://github.com/awesome-os/bun-neon.git && cd bun-neon
+# Or project & run directly via holo-project (0-byte hardlink)
+holo-project "project://cpp/bun-neon?from=repository://github.com/awesome-os/bun-neon@main"
 ```
