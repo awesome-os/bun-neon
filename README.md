@@ -1,3 +1,6 @@
+> [!NOTE]
+> Consolidated into https://github.com/awesome-os/chromium-baseline
+
 # `bun-neon` — Zero-JSC Bun Compatibility Layer for Awesome-OS
 
 `bun-neon` provides a lightweight, erasable-TypeScript Bun-compatible runtime surface (`globalThis.Bun`, `bun:sqlite`, `bun:test`, `bun:ffi`, and the `bun-neon` CLI) powered natively by Awesome-OS, Node.js built-ins (`node:sqlite`, `node:test`, `node:crypto`, `node:http`), and [`sectium-node-hook.mts`](../b8g-runtime/sectium-node-hook.mts) — with **zero JavaScriptCore (JSC)** binary overhead and **zero external npm dependencies**.
